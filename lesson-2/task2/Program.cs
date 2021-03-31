@@ -7,9 +7,9 @@ namespace task2
         static void Main(string[] args)
         {
             Console.WriteLine("Введите номер текущего месяца");
-            string month = Console.ReadLine();
+            int month = Convert.ToInt32(Console.ReadLine());
             DateTime date = new DateTime();
-            date = date.AddMonths(Convert.ToInt32(month) - 1);
+            date = date.AddMonths(month - 1);
             Console.WriteLine(date.ToString("MMMM"));
             Console.ReadLine();
         }
