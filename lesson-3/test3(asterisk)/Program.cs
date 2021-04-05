@@ -20,23 +20,30 @@ namespace test3_asterisk_
                 for (int j = 0; j < 4 - i; j++) // количество кораблей
                 {
                     bool pos;
-                    int x, y, direction;
+                    int x, y, tmpX, tmpY, direction;
                     do
                     {
                         x = position.Next(land.GetLength(0) - i);
                         y = position.Next(land.GetLength(1) - i);
                         direction = position.Next(2);
                         pos = true;
+                        tmpX = x;
+                        tmpY = y;
                         for (int n = 0; n <= i; n++)
                         {
-                            if (land[(direction == 0 ? x : x + n ), (direction != 0 ? y : y + n)] == 'X') pos = false;
+                            if (direction == 0) tmpY = y + n;
+                            else tmpX = x + n;
+                            if (land[tmpX , tmpY] == 'X') pos = false;
                         }
                             
                     } while (!pos);
-       
+                    tmpX = x;
+                    tmpY = y;
                     for (int n = 0; n <= i; n++) // размер корабля
                     {
-                        land[(direction == 0 ? x : x + n ), (direction != 0 ? y : y + n)] = 'X';
+                        if (direction == 0) tmpY = y + n;
+                        else tmpX = x + n;
+                        land[tmpX, tmpY] = 'X';
                     }
                 }
             }
