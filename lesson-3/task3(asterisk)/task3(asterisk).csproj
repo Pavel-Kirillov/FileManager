@@ -7,7 +7,7 @@
     <ProjectGuid>{49742FE9-E591-4DCE-8AB6-896278C37F8D}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>test3_asterisk_</RootNamespace>
-    <AssemblyName>test3%28asterisk%29</AssemblyName>
+    <AssemblyName>task3%28asterisk%29</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

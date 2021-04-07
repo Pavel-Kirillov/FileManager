@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace test3_asterisk_
+namespace task3_asterisk_
 {
     class Program
     {

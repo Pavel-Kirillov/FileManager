@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace test4
+namespace task4
 {
     class Program
     {
@@ -12,7 +12,7 @@ namespace test4
             Console.WriteLine("\nЗадайте величину смещения: ");
             int offset = Convert.ToInt32(Console.ReadLine());
 
-            if (Math.Abs(offset) > arr.Length) offset = offset - (offset / arr.Length) * arr.Length;
+            if (Math.Abs(offset) > arr.Length) offset -= (offset / arr.Length) * arr.Length;
             if (offset <= 0) offset = arr.Length + offset;
             
             for (int i = 0, tmpOffset = 0, tmpOffset2 = 0 , tmpFirst; i < arr.Length && arr.Length != offset;)
