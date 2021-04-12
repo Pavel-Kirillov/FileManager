@@ -7,7 +7,7 @@ namespace task2
     {
         static void Main(string[] args)
         {
-            File.AppendAllText("out.txt", $"{DateTime.Now:hh:mm:ss}\n");
+            File.AppendAllText("startup.txt", $"{DateTime.Now:hh:mm:ss}\n");
         }
     }
 }
