@@ -24,40 +24,33 @@ namespace task1
             if (arg.Length > 1)
             {
                 string[] process = arg[1].Split('.');
-
                 try
                 {
-                    Process forKill = Process.GetProcessById(Convert.ToInt32(process[0]));
-                    forKill.Kill();
-                    Console.WriteLine($"Процесс с идентификатором {process[0]} завершен.");
-                }
+                    Process[] forKill = Process.GetProcessesByName(process[0]);
+                    if (forKill.Length > 0)
+                    {
+                        forKill[0].Kill();
+                        Console.WriteLine($"Процесс {arg[1]} завершен.");
+                    } else
+                    {
+                        Process forKillID = Process.GetProcessById(Convert.ToInt32(process[0]));
+                        forKillID.Kill();
+                        Console.WriteLine($"Процесс с идентификатором {process[0]} завершен.");
+                    }
+                } 
                 catch (ArgumentException)
                 {
                     Console.WriteLine($"Процесс с идентификатором {process[0]} не выполняется.");
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine($"Процесс {process[0]} не выполняется.");
                 }
                 catch (System.ComponentModel.Win32Exception)
                 {
                     Console.WriteLine("Отказано в доступе");
                 }
-                catch (FormatException)
-                {
-                    try
-                    {
-                        Process[] forKill = Process.GetProcessesByName(process[0]);
-                        forKill[0].Kill();
-                        Console.WriteLine($"Процесс {arg[1]} завершен.");
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        Console.WriteLine($"Процесс {arg[1]} не выполняется.");
-                    }
-                    catch (System.ComponentModel.Win32Exception)
-                    {
-                        Console.WriteLine("Отказано в доступе");
-                    }
-
-                }
-
+                
             } else Help();
 
         }
