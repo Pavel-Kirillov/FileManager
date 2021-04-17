@@ -6,20 +6,6 @@ namespace task2
         MyArraySizeException,
         MyArrayDataException
     }
-    [Serializable]
-    public class ErrorArr : Exception
-    {
-        public ErrorCode Code { get; }
-        public int i;
-        public int j;
-
-        public ErrorArr(ErrorCode code, int i, int j)
-        {
-            Code = code;
-            this.i = i;
-            this.j = j;
-        }
-    }
     class Program
     {
         static void Main(string[] args)
@@ -79,6 +65,19 @@ namespace task2
                 return res;
             }
             
+        }
+        public class ErrorArr : Exception
+        {
+            public ErrorCode Code { get; }
+            public int i;
+            public int j;
+
+            public ErrorArr(ErrorCode code, int i, int j)
+            {
+                Code = code;
+                this.i = i;
+                this.j = j;
+            }
         }
     }
 }

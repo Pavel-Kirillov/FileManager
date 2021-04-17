@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace task1
 {
@@ -67,12 +63,9 @@ namespace task1
             {
                 Sort(all,false);
             }
-
             Console.WriteLine("ID\tИмя");
-            for (int i =0; i < all.Length;i++)
-            {
-                Console.WriteLine($"{all[i].Id}\t{all[i].ProcessName}");
-            }
+            foreach (Process process in all)
+                Console.WriteLine($"{process.Id}\t{process.ProcessName}");
         }
 
         private static void Sort(Process[] all, bool sort)
