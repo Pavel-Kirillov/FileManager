@@ -8,8 +8,8 @@ namespace task2
 {
     class Program
     {
-        static readonly int SIZE_X = 3;
-        static readonly int SIZE_Y = 3;
+        static readonly int SIZE_X = 5;
+        static readonly int SIZE_Y = 5;
 
         static char[,] field = new char[SIZE_Y, SIZE_X];
 
@@ -33,7 +33,7 @@ namespace task2
         private static void PrintField()
         {
             Console.Clear();
-            Console.WriteLine("-------");
+            Console.WriteLine("-----------");
             for (int i = 0; i < SIZE_Y; i++)
             {
                 Console.Write("|");
@@ -43,7 +43,7 @@ namespace task2
                 }
                 Console.WriteLine();
             }
-            Console.WriteLine("-------");
+            Console.WriteLine("-----------");
         }
 
         private static void SetSym(int y, int x, char sym)
@@ -104,9 +104,6 @@ namespace task2
 
         private static bool CheckWin(char sym)
         {
-
-            uint winDiagonalLine = 0;
-            uint winDiagonalLineReverse = 0;
             for (uint i = 0;i < field.GetLength(0); i++)
             {
                 uint winHorizontalLine = 0;
@@ -115,14 +112,22 @@ namespace task2
                 {
                     if (field[i, j] == sym) winHorizontalLine++;
                     if (field[j, i] == sym) winVerticalLine++;
-                    if (winHorizontalLine == 3 || winVerticalLine == 3) return true;
+                    if (winHorizontalLine == 4 || winVerticalLine == 4) return true;
                 }
-                if (field[i, i] == sym) winDiagonalLine++;
-                if (field[i, 2 - i] == sym) winDiagonalLineReverse++;
-                if (winDiagonalLine == 3 || winDiagonalLineReverse == 3) return true;
             }
-            
-            
+            uint winDiagonalLine = 0;
+            uint winDiagonalLineReverse = 0;
+            for (int j = -1;j < 2;j++)
+                for (uint i = 0; i < field.GetLength(0); i++)
+                {
+                    int shift = (int)i + j;
+                    if (shift >= 0 && shift < field.GetLength(0))
+                    {
+                        if (field[i, shift] == sym) winDiagonalLine++;
+                        if (field[i, 4 - shift] == sym) winDiagonalLineReverse++;
+                        if (winDiagonalLine == 4 || winDiagonalLineReverse == 4) return true;
+                    }
+                }
             return false;
         }
 
