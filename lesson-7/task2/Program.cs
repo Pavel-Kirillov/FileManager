@@ -104,40 +104,25 @@ namespace task2
 
         private static bool CheckWin(char sym)
         {
-            if (field[0, 0] == sym && field[0, 1] == sym && field[0, 2] == sym)
-            {
-                return true;
-            }
-            if (field[1, 0] == sym && field[1, 1] == sym && field[1, 2] == sym)
-            {
-                return true;
-            }
-            if (field[2, 0] == sym && field[2, 1] == sym && field[2, 2] == sym)
-            {
-                return true;
-            }
 
-            if (field[0, 0] == sym && field[1, 0] == sym && field[2, 0] == sym)
+            uint winDiagonalLine = 0;
+            uint winDiagonalLineReverse = 0;
+            for (uint i = 0;i < field.GetLength(0); i++)
             {
-                return true;
+                uint winHorizontalLine = 0;
+                uint winVerticalLine = 0;
+                for (uint j = 0; j < field.GetLength(1); j++)
+                {
+                    if (field[i, j] == sym) winHorizontalLine++;
+                    if (field[j, i] == sym) winVerticalLine++;
+                    if (winHorizontalLine == 3 || winVerticalLine == 3) return true;
+                }
+                if (field[i, i] == sym) winDiagonalLine++;
+                if (field[i, 2 - i] == sym) winDiagonalLineReverse++;
+                if (winDiagonalLine == 3 || winDiagonalLineReverse == 3) return true;
             }
-            if (field[0, 1] == sym && field[1, 1] == sym && field[2, 1] == sym)
-            {
-                return true;
-            }
-            if (field[0, 2] == sym && field[1, 2] == sym && field[2, 2] == sym)
-            {
-                return true;
-            }
-
-            if (field[0, 0] == sym && field[1, 1] == sym && field[2, 2] == sym)
-            {
-                return true;
-            }
-            if (field[2, 0] == sym && field[1, 1] == sym && field[0, 2] == sym)
-            {
-                return true;
-            }
+            
+            
             return false;
         }
 
