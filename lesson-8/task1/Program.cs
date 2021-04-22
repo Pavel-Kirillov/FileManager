@@ -1,4 +1,5 @@
 ﻿using System;
+using GreetingLibrary;
 
 namespace task1
 {
@@ -6,8 +7,9 @@ namespace task1
     {
         static void Main(string[] args)
         {
-            string str = "Hello Word!";
-            Console.WriteLine(str);
+            Greeting.Say();
+            Greeting.Say("ru");
+            Console.ReadKey();
         }
     }
 }
