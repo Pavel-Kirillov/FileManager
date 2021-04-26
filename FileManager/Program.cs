@@ -132,21 +132,43 @@ namespace FileManager
             if (dir == "..") currentDir = new DirectoryInfo(Directory.GetParent(Directory.GetCurrentDirectory()).FullName);
             else
             {
-                if (!drive) currentDir = new DirectoryInfo(Directory.GetCurrentDirectory() + '\\' + dir);
+                if (!drive)
+                {
+                    currentDir = new DirectoryInfo(Directory.GetCurrentDirectory() + '\\' + dir);
+                    
+                }
                 else
                 {
                     currentDir = new DirectoryInfo(dir);
                     drive = false;
                 }
+                
+            }
+            try
+            {
+                Directory.SetCurrentDirectory(currentDir.FullName);
                 pos = 0;
             }
-
-            Directory.SetCurrentDirectory(currentDir.FullName);
+            catch//System.IO.IOException,System.UnauthorizedAccessException
+            {
+                Directory.SetCurrentDirectory(Directory.GetParent(currentDir.FullName).FullName);
+                currentDir = Directory.GetParent(currentDir.FullName);
+            }
+            
             PrintLine(1, 1, currentDir.FullName, Console.BufferWidth - 3);
-            string[] listFiles = Directory.GetFileSystemEntries(currentDir.FullName);
+            try
+            {
+                string[] listFiles = Directory.GetFileSystemEntries(currentDir.FullName);
+                
+                return listFiles;
+            }catch //System.UnauthorizedAccessException,System.IO.IOException
+            {
+                string[] listFiles = Directory.GetFileSystemEntries(Directory.GetParent(currentDir.FullName).FullName);
+                Directory.SetCurrentDirectory(Directory.GetParent(currentDir.FullName).FullName);
+                return listFiles;
+            }
 
-
-            return listFiles;
+            
         }
         static string[] PrintList(string[] listFiles, int shift = 0)
         {
