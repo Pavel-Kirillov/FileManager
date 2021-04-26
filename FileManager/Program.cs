@@ -11,6 +11,7 @@ namespace FileManager
     {
         static int numberItems = 10;
         static int pos = 0;
+        static bool drive = false;
         static void Main()
         {
 
@@ -92,12 +93,21 @@ namespace FileManager
                 }
                 else if (key.Key == ConsoleKey.Enter)
                 {
-                    //if (Directory.GetParent(Directory.GetCurrentDirectory()) != null)
+                    if (Directory.GetParent(Directory.GetCurrentDirectory()) == null && list[pos] == "..")
+                    {
+                        drive = true;
+                        listFiles = Directory.GetLogicalDrives();
+                        list = PrintList(listFiles);
+                        PrintLine(1, 1, " ", Console.BufferWidth - 3);
+
+                    }
+                    else
                     {
                         listFiles = ChageDir(list[pos]);
                         list = PrintList(listFiles);
                         posTmp = pos;
                         shift = 0;
+                        
                     }
 
                 }
@@ -122,7 +132,12 @@ namespace FileManager
             if (dir == "..") currentDir = new DirectoryInfo(Directory.GetParent(Directory.GetCurrentDirectory()).FullName);
             else
             {
-                currentDir = new DirectoryInfo(Directory.GetCurrentDirectory() + '\\' + dir);
+                if (!drive) currentDir = new DirectoryInfo(Directory.GetCurrentDirectory() + '\\' + dir);
+                else
+                {
+                    currentDir = new DirectoryInfo(dir);
+                    drive = false;
+                }
                 pos = 0;
             }
 
@@ -138,16 +153,31 @@ namespace FileManager
             ClearArea();
             int count = listFiles.Length - shift;
             string[] listForPrint = new string[(numberItems - 1 > count ? count : numberItems - 1) + 1];
-            for (int i = 0; i < listForPrint.Length; i++)
+            if (!drive)
             {
-                if (i == 0 && shift == 0) listForPrint[0] = "..";
-                else
-                    listForPrint[i] = listFiles[i - 1 + shift].Split('\\').Last();
-                bool selectLine;
-                if (i == pos) selectLine = true;
-                else selectLine = false;
-                PrintLine(1, 3 + i, listForPrint[i], listForPrint[i].Length, selectLine);
+                for (int i = 0; i < listForPrint.Length; i++)
+                {
+                    if (i == 0 && shift == 0) listForPrint[0] = "..";
+                    else
+                        listForPrint[i] = listFiles[i - 1 + shift].Split('\\').Last();
+                    bool selectLine;
+                    if (i == pos) selectLine = true;
+                    else selectLine = false;
+                    PrintLine(1, 3 + i, listForPrint[i], listForPrint[i].Length, selectLine);
+                }
             }
+            else
+            {
+                for (int i = 0; i < listFiles.Length; i++)
+                {
+                    bool selectLine;
+                    if (i == pos) selectLine = true;
+                    else selectLine = false;
+                    PrintLine(1, 3 + i, listFiles[i], listFiles[i].Length, selectLine);
+                }
+                listForPrint = listFiles;
+            }
+
             return listForPrint;
         }
         static void PrintSym(int x, int y, char sym)
