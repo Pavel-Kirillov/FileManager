@@ -33,7 +33,7 @@ namespace FileManager
                     if (i > 0 && i < width - 1 && (j == 2 || j == height - 3)) PrintSym(i, j, '-');
                 }
 
-            FileSystemInfo[] listFiles = ChageDir();
+            string[] listFiles = ChageDir();
             string[] list = PrintList(listFiles);
 
             int posTmp = 0;
@@ -41,7 +41,7 @@ namespace FileManager
             //навигация
             while (true)
             {
-                if (shift >= listFiles.Count() - list.Length) shift = listFiles.Count() - list.Length;
+                if (shift >= listFiles.Length - list.Length) shift = listFiles.Length - list.Length;
                 if (shift <= 0) shift = 1;
                 if (posTmp != pos)
                 {
@@ -53,7 +53,7 @@ namespace FileManager
                     }
                     else if (pos >= list.Length)
                     {
-                        if (list.Last() != listFiles.Last().Name)
+                        if (list.Last() != listFiles.Last().Split('\\').Last())
                             list = PrintList(listFiles, ++shift);
                         pos = list.Length - 1;
                     }
@@ -83,7 +83,7 @@ namespace FileManager
                 }
                 else if (key.Key == ConsoleKey.PageUp)
                 {
-                  if (pos != list.Length - 1)
+                    if (pos != list.Length - 1)
                     {
                         shift -= list.Length - pos;
                         pos = -1;
@@ -92,23 +92,13 @@ namespace FileManager
                 }
                 else if (key.Key == ConsoleKey.Enter)
                 {
-                    if (Directory.GetParent(Directory.GetCurrentDirectory()) != null)
+                    //if (Directory.GetParent(Directory.GetCurrentDirectory()) != null)
                     {
                         listFiles = ChageDir(list[pos]);
                         list = PrintList(listFiles);
                         posTmp = pos;
                         shift = 0;
                     }
-                    else
-                    {
-                        ClearArea();
-                        list = Directory.GetLogicalDrives();
-                        listFiles = new FileSystemInfo[list.Length];
-                        pos = 0;
-                        posTmp = pos;
-                        shift = 0;
-                    }
-                    
 
                 }
                 Console.CursorVisible = false;
@@ -126,14 +116,10 @@ namespace FileManager
 
 
         }
-        static FileSystemInfo[] ChageDir(string dir = "")
+        static string[] ChageDir(string dir = "")
         {
             DirectoryInfo currentDir;
-            if (dir == "..")
-            {
-                    currentDir = new DirectoryInfo(Directory.GetParent(Directory.GetCurrentDirectory()).FullName);
-            }
-               
+            if (dir == "..") currentDir = new DirectoryInfo(Directory.GetParent(Directory.GetCurrentDirectory()).FullName);
             else
             {
                 currentDir = new DirectoryInfo(Directory.GetCurrentDirectory() + '\\' + dir);
@@ -142,21 +128,21 @@ namespace FileManager
 
             Directory.SetCurrentDirectory(currentDir.FullName);
             PrintLine(1, 1, currentDir.FullName, Console.BufferWidth - 3);
-            FileSystemInfo[] listFiles = currentDir.GetFileSystemInfos();
+            string[] listFiles = Directory.GetFileSystemEntries(currentDir.FullName);
 
 
             return listFiles;
         }
-        static string[] PrintList(FileSystemInfo[] listFiles, int shift = 0)
+        static string[] PrintList(string[] listFiles, int shift = 0)
         {
             ClearArea();
-            int count = listFiles.Count() - shift;
+            int count = listFiles.Length - shift;
             string[] listForPrint = new string[(numberItems - 1 > count ? count : numberItems - 1) + 1];
             for (int i = 0; i < listForPrint.Length; i++)
             {
                 if (i == 0 && shift == 0) listForPrint[0] = "..";
                 else
-                    listForPrint[i] = listFiles.ElementAt(i - 1 + shift).Name;
+                    listForPrint[i] = listFiles[i - 1 + shift].Split('\\').Last();
                 bool selectLine;
                 if (i == pos) selectLine = true;
                 else selectLine = false;
