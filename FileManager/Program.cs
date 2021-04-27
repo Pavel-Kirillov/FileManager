@@ -6,14 +6,11 @@ namespace FileManager
 {
     class Program
     {
-        static int numberItems = 10;
+        static readonly int numberItems = (int)Properties.Settings.Default.numberOfItemsPerPage;
         static int pos = 0;
         static bool drive = false;
         static void Main()
         {
-
-
-
             Console.Clear();
             int width = Console.WindowWidth < 120 ? 120 : Console.WindowWidth;
             int height = numberItems + 6;
