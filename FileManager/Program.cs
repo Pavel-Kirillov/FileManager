@@ -39,6 +39,8 @@ namespace FileManager
 
             int posTmp = 0;
             int shift = 0;
+            int curPos = 1;
+            string cmd = "";
             //навигация
             while (true)
             {
@@ -66,10 +68,10 @@ namespace FileManager
 
                 posTmp = pos;
 
-                Console.SetCursorPosition(1, height - 2);
+                Console.SetCursorPosition(curPos, height - 2);
                 Console.CursorVisible = true;
-                ConsoleKeyInfo key = Console.ReadKey(true);
-
+                ConsoleKeyInfo key = Console.ReadKey();
+                
                 if (key.Key == ConsoleKey.F10) return;
                 else if (key.Key == ConsoleKey.DownArrow) pos++;
                 else if (key.Key == ConsoleKey.UpArrow) pos--;
@@ -93,7 +95,16 @@ namespace FileManager
                 }
                 else if (key.Key == ConsoleKey.Enter)
                 {
-                    if (Directory.GetParent(Directory.GetCurrentDirectory()) == null && list[pos] == "..")
+                    if (cmd != "")
+                    {
+                        PrintLine(1, height - 2," ", cmd.Length);
+                        curPos = 1;
+                        CommandHandler(cmd);
+                        cmd = "";
+                        listFiles = ChageDir();
+                        list = PrintList(listFiles);
+                    }
+                    else if (Directory.GetParent(Directory.GetCurrentDirectory()) == null && list[pos] == "..")
                     {
                         drive = true;
                         listFiles = Directory.GetLogicalDrives();
@@ -111,6 +122,24 @@ namespace FileManager
                     }
 
                 }
+                // реализация ввода команд с клавиатуры
+                else if (key.Key == ConsoleKey.Backspace)
+                {
+                        if( cmd.Length > 0)
+                    {
+                        Console.Write(" ");
+                        cmd = cmd.Remove(cmd.Length - 1);
+                        curPos--;
+                    }
+                }
+                else
+                {
+                    cmd += key.KeyChar;
+                    curPos++;
+                }
+
+
+
                 Console.CursorVisible = false;
             }
 
@@ -118,6 +147,118 @@ namespace FileManager
 
 
         }
+
+        private static void CommandHandler(string cmd)
+        {
+            string[] cmdList = new string[3];
+            string cmdTmp = "";
+            int count = 0;
+            for (int i = 0; i < cmd.Length; i++)
+            {
+                if (cmd[i] != ' ') cmdTmp += cmd[i];
+                else
+                {
+                    cmdList[count] = cmdTmp;
+                    cmdTmp = "";
+                    count++;
+                }
+            }
+            cmdList[count] = cmdTmp;
+
+            try
+            {
+                string currentDir = Directory.GetCurrentDirectory();
+                if (cmdList[0] == "copy" || cmdList[0] == "COPY")
+                {
+                    char op1Last = cmdList[1][cmdList[1].Length - 1];
+                    char op2Last = cmdList[2][cmdList[2].Length - 1];
+                    string path1 = cmdList[1];
+                    string path2 = cmdList[2];
+                    
+                    if (op1Last == '\\' && op2Last == '\\')
+                    {
+                        if (Directory.Exists(path1)) CopyDir(path1, path2);
+                        else
+                        {
+                            path1 = currentDir + '\\' + cmdList[1];
+                            if (Directory.Exists(path1)) CopyDir(path1, path2);
+                        }
+                    }
+                    else if (op1Last != '\\' && op2Last != '\\')
+                    {
+                        if (File.Exists(path1)) File.Copy(path1, path2, true);
+                        else
+                        {
+                            path1 = currentDir + '\\' + cmdList[1];
+                            if (File.Exists(path1)) File.Copy(path1, path2, true);
+                        }
+                    }
+                    else if (op1Last != '\\' && op2Last == '\\')
+                    {
+                        if (File.Exists(path1)) File.Copy(path1, path2 + path1, true);
+                        else
+                        {
+                            path1 = currentDir + '\\' + cmdList[1];
+                            if (File.Exists(path1)) File.Copy(path1, path2 + path1, true);
+                        }
+                    }
+                }
+                else if (cmdList[0] == "del" || cmdList[0] == "DEL")
+                {
+                    char op1Last = cmdList[1][cmdList[1].Length - 1];
+                    string path = cmdList[1];
+                    if (op1Last == '\\')
+                    {
+                        if (Directory.Exists(cmdList[1])) DelDir(path);
+                        else
+                        {
+                            path = currentDir + '\\' + cmdList[1];
+                            if (Directory.Exists(path)) DelDir(path);
+                        }
+                    }
+                    else
+                    {
+                        if (File.Exists(cmdList[1])) File.Delete(path);
+                        else
+                        {
+                            path = currentDir + '\\' + cmdList[1];
+                            if (File.Exists(path)) File.Delete(path);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+        }
+        //копирование директории
+        static void CopyDir(string source, string destination)
+        {
+            string[] listForCopy = Directory.GetDirectories(source, "*", SearchOption.AllDirectories);
+            for (int i = 0; i < listForCopy.Length; i++)
+                if (!Directory.Exists(destination + listForCopy[i]))
+                    Directory.CreateDirectory(destination + listForCopy[i]);
+            listForCopy = Directory.GetFiles(source, "*", SearchOption.AllDirectories);
+            for (int i = 0; i < listForCopy.Length; i++)
+            {
+                File.Copy(listForCopy[i], destination + listForCopy[i], true);
+            }
+        }
+        //удаление директории
+        static void DelDir(string path)
+        {
+            string[] del = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
+            for (int i = 0; i < del.Length; i++)
+                File.Delete(del[i]);
+            del = Directory.GetDirectories(path, "*", SearchOption.AllDirectories);
+            for (int i = del.Length - 1; i >= 0; i--)
+                Directory.Delete(del[i]);
+            Directory.Delete(path);
+        }
+
+
+
         static void ClearArea()
         {
             for (int i = 3; i < Console.BufferHeight - 3; i++)
