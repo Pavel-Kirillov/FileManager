@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
+using System.Linq;
 
 namespace FileManager
 {
@@ -18,7 +15,7 @@ namespace FileManager
 
 
             Console.Clear();
-            int width = Console.WindowWidth;
+            int width = Console.WindowWidth < 120 ? 120 : Console.WindowWidth;
             int height = numberItems + 6;
             Console.SetWindowSize(width + 1, height);
             Console.SetBufferSize(width + 1, height);
@@ -45,13 +42,13 @@ namespace FileManager
             while (true)
             {
                 if (shift >= listFiles.Length - list.Length) shift = listFiles.Length - list.Length;
-                if (shift <= 0) shift = 1;
+                if (shift < 0) shift = 0;
                 if (posTmp != pos)
                 {
                     if (pos < 0)
                     {
                         if (list.First() != "..")
-                            list = PrintList(listFiles, --shift);
+                            list = PrintList(listFiles, shift--);
                         pos = 0;
                     }
                     else if (pos >= list.Length)
@@ -62,8 +59,8 @@ namespace FileManager
                     }
 
 
-                    PrintLine(1, 3 + posTmp, list[posTmp], list[posTmp].Length);
-                    PrintLine(1, 3 + pos, list[pos], list[pos].Length, true);
+                    PrintLine(1, 3 + posTmp, list[posTmp], list[posTmp].Length, true);
+                    PrintLine(1, 3 + pos, list[pos], list[pos].Length, true, true);
                 }
 
                 posTmp = pos;
@@ -71,7 +68,7 @@ namespace FileManager
                 Console.SetCursorPosition(curPos, height - 2);
                 Console.CursorVisible = true;
                 ConsoleKeyInfo key = Console.ReadKey();
-                
+
                 if (key.Key == ConsoleKey.F10) return;
                 else if (key.Key == ConsoleKey.DownArrow) pos++;
                 else if (key.Key == ConsoleKey.UpArrow) pos--;
@@ -93,11 +90,16 @@ namespace FileManager
                     }
                     else pos = 0;
                 }
+                else if (key.Key == ConsoleKey.F2)
+                {
+                    long sizeDir = SumSizeDir(list[pos]);
+                    PrintLine(1, pos + 3, list[pos], list[pos].Length, true, true, Convert.ToString(sizeDir));
+                }
                 else if (key.Key == ConsoleKey.Enter)
                 {
                     if (cmd != "")
                     {
-                        PrintLine(1, height - 2," ", cmd.Length);
+                        PrintLine(1, height - 2, " ", cmd.Length);
                         curPos = 1;
                         CommandHandler(cmd);
                         cmd = "";
@@ -110,7 +112,6 @@ namespace FileManager
                         listFiles = Directory.GetLogicalDrives();
                         list = PrintList(listFiles);
                         PrintLine(1, 1, " ", Console.BufferWidth - 3);
-
                     }
                     else
                     {
@@ -118,14 +119,12 @@ namespace FileManager
                         list = PrintList(listFiles);
                         posTmp = pos;
                         shift = 0;
-                        
                     }
-
                 }
                 // реализация ввода команд с клавиатуры
                 else if (key.Key == ConsoleKey.Backspace)
                 {
-                        if( cmd.Length > 0)
+                    if (cmd.Length > 0)
                     {
                         Console.Write(" ");
                         cmd = cmd.Remove(cmd.Length - 1);
@@ -137,9 +136,6 @@ namespace FileManager
                     cmd += key.KeyChar;
                     curPos++;
                 }
-
-
-
                 Console.CursorVisible = false;
             }
 
@@ -147,7 +143,7 @@ namespace FileManager
 
 
         }
-
+        //обработка комманд
         private static void CommandHandler(string cmd)
         {
             string[] cmdList = new string[3];
@@ -174,7 +170,7 @@ namespace FileManager
                     char op2Last = cmdList[2][cmdList[2].Length - 1];
                     string path1 = cmdList[1];
                     string path2 = cmdList[2];
-                    
+
                     if (op1Last == '\\' && op2Last == '\\')
                     {
                         if (Directory.Exists(path1)) CopyDir(path1, path2);
@@ -264,8 +260,6 @@ namespace FileManager
             for (int i = 3; i < Console.BufferHeight - 3; i++)
                 for (int j = 1; j < Console.BufferWidth - 2; j++)
                     PrintSym(j, i, ' ');
-
-
         }
         static string[] ChageDir(string dir = "")
         {
@@ -276,14 +270,14 @@ namespace FileManager
                 if (!drive)
                 {
                     currentDir = new DirectoryInfo(Directory.GetCurrentDirectory() + '\\' + dir);
-                    
+
                 }
                 else
                 {
                     currentDir = new DirectoryInfo(dir);
                     drive = false;
                 }
-                
+
             }
             try
             {
@@ -295,21 +289,22 @@ namespace FileManager
                 Directory.SetCurrentDirectory(Directory.GetParent(currentDir.FullName).FullName);
                 currentDir = Directory.GetParent(currentDir.FullName);
             }
-            
+
             PrintLine(1, 1, currentDir.FullName, Console.BufferWidth - 3);
             try
             {
                 string[] listFiles = Directory.GetFileSystemEntries(currentDir.FullName);
-                
+
                 return listFiles;
-            }catch //System.UnauthorizedAccessException,System.IO.IOException
+            }
+            catch //System.UnauthorizedAccessException,System.IO.IOException
             {
                 string[] listFiles = Directory.GetFileSystemEntries(Directory.GetParent(currentDir.FullName).FullName);
                 Directory.SetCurrentDirectory(Directory.GetParent(currentDir.FullName).FullName);
                 return listFiles;
             }
 
-            
+
         }
         static string[] PrintList(string[] listFiles, int shift = 0)
         {
@@ -326,8 +321,9 @@ namespace FileManager
                     bool selectLine;
                     if (i == pos) selectLine = true;
                     else selectLine = false;
-                    PrintLine(1, 3 + i, listForPrint[i], listForPrint[i].Length, selectLine);
+                    PrintLine(1, 3 + i, listForPrint[i], listForPrint[i].Length, true, selectLine);
                 }
+
             }
             else
             {
@@ -336,7 +332,7 @@ namespace FileManager
                     bool selectLine;
                     if (i == pos) selectLine = true;
                     else selectLine = false;
-                    PrintLine(1, 3 + i, listFiles[i], listFiles[i].Length, selectLine);
+                    PrintLine(1, 3 + i, listFiles[i], listFiles[i].Length, true, selectLine);
                 }
                 listForPrint = listFiles;
             }
@@ -348,7 +344,7 @@ namespace FileManager
             Console.SetCursorPosition(x, y);
             Console.Write(sym);
         }
-        static void PrintLine(int x, int y, string line, int length, bool select = false)
+        static void PrintLine(int x, int y, string line, int length, bool attr = false, bool select = false, string sizeDir = "")
         {
             Console.SetCursorPosition(x, y);
             if (select)
@@ -356,12 +352,66 @@ namespace FileManager
                 Console.BackgroundColor = ConsoleColor.Gray;
                 Console.ForegroundColor = ConsoleColor.Black;
             }
-            for (int i = 0; i < length; i++)
+            if (line.Length != 0 && attr && line != "..")
+            {
+                line = AddAttributeFiles(line, sizeDir);
+                string[] lineSplit = line.Split('\t');
+                line = FormattingLine(lineSplit[0], 35) + '\t' + FormattingLine(lineSplit[1], 4) + '\t' + FormattingLine(lineSplit[2], 4) + '\t' +
+                    FormattingLine(lineSplit[3], 20) + '\t' + FormattingLine(lineSplit[4], 35);
+            }
+            for (int i = 0; i < (length < line.Length ? line.Length : length); i++)
             {
                 if (i < line.Length) Console.Write(line[i]);
                 else Console.Write(" ");
             }
             Console.ResetColor();
         }
+
+        private static string FormattingLine(string line, int lenght)
+        {
+            string lineForPrint = "";
+            for (int j = 0; j < lenght; j++)
+            {
+                if (j < line.Length) lineForPrint += line[j];
+                else lineForPrint += " ";
+            }
+            return lineForPrint;
+        }
+
+        //вычисление размера директории
+        static long SumSizeDir(string list)
+        {
+            long sum = 0;
+            try
+            {
+                string[] dirList = Directory.GetDirectories(list);
+                for (int i = 0; i < dirList.Length; i++) sum += SumSizeDir(dirList[i]);
+
+                DirectoryInfo dir = new DirectoryInfo(list);
+                FileInfo[] filesLenght = dir.GetFiles();
+                for (int j = 0; j < filesLenght.Length; j++) sum += filesLenght[j].Length;
+            }
+            catch { }
+            return sum;
+        }
+
+        //добавление атрибутов файла
+        static string AddAttributeFiles(string file, string sizeDir = "")
+        {
+            //FileAttributes fileAttr = File.GetAttributes(file);
+            string attr = "";
+            FileInfo fileAttr = new FileInfo(file);
+            string dir = "FILE";
+            if ((fileAttr.Attributes & FileAttributes.Archive) == FileAttributes.Archive) attr += "A";
+            if ((fileAttr.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly) attr += "R";
+            if ((fileAttr.Attributes & FileAttributes.System) == FileAttributes.System) attr += "S";
+            if ((fileAttr.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden) attr += "H";
+            if ((fileAttr.Attributes & FileAttributes.Directory) == FileAttributes.Directory) dir = "DIR";
+            DateTime time = File.GetLastWriteTime(file);
+            file += "\t" + dir + "\t" + attr + "\t" + time + "\t" + 
+                ((fileAttr.Attributes & FileAttributes.Directory) == FileAttributes.Directory ? ((sizeDir!="")? sizeDir + " байт" : ""): fileAttr.Length + " байт");
+            return file;
+        }
+
     }
 }
