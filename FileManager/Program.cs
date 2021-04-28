@@ -27,7 +27,7 @@ namespace FileManager
                     if (j > 0 && j < height - 1 && (i == 0 || i == width - 1)) PrintSym(i, j, '|');
                     if (i > 0 && i < width - 1 && (j == 2 || j == height - 3)) PrintSym(i, j, '-');
                 }
-
+            if (Properties.Settings.Default.saveCurrentDir != "") Directory.SetCurrentDirectory(Properties.Settings.Default.saveCurrentDir);
             string[] listFiles = ChageDir();
             string[] list = PrintList(listFiles);
 
@@ -66,7 +66,12 @@ namespace FileManager
                 Console.CursorVisible = true;
                 ConsoleKeyInfo key = Console.ReadKey();
 
-                if (key.Key == ConsoleKey.F10) return;
+                if (key.Key == ConsoleKey.F10)
+                {
+                    Properties.Settings.Default.saveCurrentDir = Directory.GetCurrentDirectory();
+                    Properties.Settings.Default.Save();
+                    return;
+                }
                 else if (key.Key == ConsoleKey.DownArrow) pos++;
                 else if (key.Key == ConsoleKey.UpArrow) pos--;
                 else if (key.Key == ConsoleKey.PageDown)
