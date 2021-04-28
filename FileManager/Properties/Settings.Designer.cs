@@ -23,15 +23,12 @@ namespace FileManager.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("20")]
         public uint numberOfItemsPerPage {
             get {
                 return ((uint)(this["numberOfItemsPerPage"]));
-            }
-            set {
-                this["numberOfItemsPerPage"] = value;
             }
         }
         
@@ -44,6 +41,18 @@ namespace FileManager.Properties {
             }
             set {
                 this["saveCurrentDir"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string installPath {
+            get {
+                return ((string)(this["installPath"]));
+            }
+            set {
+                this["installPath"] = value;
             }
         }
     }

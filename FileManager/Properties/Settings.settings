@@ -2,10 +2,13 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="FileManager.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="numberOfItemsPerPage" Type="System.UInt32" Scope="User">
+    <Setting Name="numberOfItemsPerPage" Type="System.UInt32" Scope="Application">
       <Value Profile="(Default)">20</Value>
     </Setting>
     <Setting Name="saveCurrentDir" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="installPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

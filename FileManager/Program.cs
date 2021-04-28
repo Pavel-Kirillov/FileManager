@@ -9,6 +9,8 @@ namespace FileManager
         static readonly int numberItems = (int)Properties.Settings.Default.numberOfItemsPerPage;
         static int pos = 0;
         static bool drive = false;
+        static Exception err = new Exception();
+        static string fileErr = Properties.Settings.Default.installPath + "\\errors\\random_name_exception.txt";
         static void Main()
         {
             Console.Clear();
@@ -16,7 +18,7 @@ namespace FileManager
             int height = numberItems + 6;
             Console.SetWindowSize(width + 1, height);
             Console.SetBufferSize(width + 1, height);
-
+            if (!Directory.Exists(Properties.Settings.Default.installPath + "\\errors")) Directory.CreateDirectory(Properties.Settings.Default.installPath + "\\errors");
             //рисуем рамку
             for (int i = 0; i < width; i++)
                 for (int j = 0; j < height; j++)
@@ -28,6 +30,11 @@ namespace FileManager
                     if (i > 0 && i < width - 1 && (j == 2 || j == height - 3)) PrintSym(i, j, '-');
                 }
             if (Properties.Settings.Default.saveCurrentDir != "") Directory.SetCurrentDirectory(Properties.Settings.Default.saveCurrentDir);
+            else
+            {
+                Properties.Settings.Default.installPath = Directory.GetCurrentDirectory();
+                Properties.Settings.Default.Save();
+            }
             string[] listFiles = ChageDir();
             string[] list = PrintList(listFiles);
 
@@ -94,8 +101,11 @@ namespace FileManager
                 }
                 else if (key.Key == ConsoleKey.F2)
                 {
-                    long sizeDir = SumSizeDir(list[pos]);
-                    PrintLine(1, pos + 3, list[pos], list[pos].Length, true, true, Convert.ToString(sizeDir));
+                    if (list[pos] != "..")
+                    {
+                        long sizeDir = SumSizeDir(list[pos]);
+                        PrintLine(1, pos + 3, list[pos], list[pos].Length, true, true, Convert.ToString(sizeDir));
+                    }
                 }
                 else if (key.Key == ConsoleKey.Enter)
                 {
@@ -136,7 +146,7 @@ namespace FileManager
                         curPos--;
                     }
                 }
-                else
+                else 
                 {
                     cmd += key.KeyChar;
                     curPos++;
@@ -187,7 +197,10 @@ namespace FileManager
                     else File.Delete(path1);
                 }
             }
-            catch { }
+            catch (Exception err)
+            {
+                File.AppendAllText(fileErr, err.Message + '\n');
+            }
         }
         //копирование директории
         static void CopyDir(string source, string destination)
@@ -239,8 +252,9 @@ namespace FileManager
                 Directory.SetCurrentDirectory(currentDir.FullName);
                 pos = 0;
             }
-            catch//System.IO.IOException,System.UnauthorizedAccessException
+            catch (Exception err)//System.IO.IOException,System.UnauthorizedAccessException
             {
+                File.AppendAllText(fileErr, err.Message + '\n');
                 Directory.SetCurrentDirectory(Directory.GetParent(currentDir.FullName).FullName);
                 currentDir = Directory.GetParent(currentDir.FullName);
             }
@@ -248,11 +262,11 @@ namespace FileManager
             try
             {
                 string[] listFiles = Directory.GetFileSystemEntries(currentDir.FullName);
-
                 return listFiles;
             }
-            catch //System.UnauthorizedAccessException,System.IO.IOException
+            catch (Exception err)//System.UnauthorizedAccessException,System.IO.IOException
             {
+                File.AppendAllText(fileErr, err.Message + '\n');
                 string[] listFiles = Directory.GetFileSystemEntries(Directory.GetParent(currentDir.FullName).FullName);
                 Directory.SetCurrentDirectory(Directory.GetParent(currentDir.FullName).FullName);
                 return listFiles;
@@ -342,7 +356,10 @@ namespace FileManager
                 FileInfo[] filesLenght = dir.GetFiles();
                 for (int j = 0; j < filesLenght.Length; j++) sum += filesLenght[j].Length;
             }
-            catch { }
+            catch (Exception err)
+            {
+                File.AppendAllText(fileErr, err.Message + '\n');
+            }
             return sum;
         }
 
