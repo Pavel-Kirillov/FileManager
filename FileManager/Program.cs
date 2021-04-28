@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 namespace FileManager
 {
@@ -9,15 +11,23 @@ namespace FileManager
         static readonly int numberItems = (int)Properties.Settings.Default.numberOfItemsPerPage;
         static int pos = 0;
         static bool drive = false;
-        static Exception err = new Exception();
-        static string fileErr = Properties.Settings.Default.installPath + "\\errors\\random_name_exception.txt";
+        static readonly string fileErr = Properties.Settings.Default.installPath + "\\errors\\random_name_exception.txt";
+        static List<string> history = new List<string>();
+        static int curPos = 1;
+        static int height = numberItems + 6;
         static void Main()
         {
             Console.Clear();
             int width = Console.WindowWidth < 120 ? 120 : Console.WindowWidth;
-            int height = numberItems + 6;
+
             Console.SetWindowSize(width + 1, height);
             Console.SetBufferSize(width + 1, height);
+
+
+            string loadHistory = Properties.Settings.Default.installPath + "\\history.json";
+            if (File.Exists(loadHistory)) history = JsonSerializer.Deserialize<List<string>>(File.ReadAllText(loadHistory));
+
+
             if (!Directory.Exists(Properties.Settings.Default.installPath + "\\errors")) Directory.CreateDirectory(Properties.Settings.Default.installPath + "\\errors");
             //рисуем рамку
             for (int i = 0; i < width; i++)
@@ -40,8 +50,8 @@ namespace FileManager
 
             int posTmp = 0;
             int shift = 0;
-            int curPos = 1;
             string cmd = "";
+            int historyCount = -1;
             //навигация
             while (true)
             {
@@ -73,10 +83,14 @@ namespace FileManager
                 Console.CursorVisible = true;
                 ConsoleKeyInfo key = Console.ReadKey();
 
+
+
                 if (key.Key == ConsoleKey.F10)
                 {
                     Properties.Settings.Default.saveCurrentDir = Directory.GetCurrentDirectory();
                     Properties.Settings.Default.Save();
+                    string saveHistory = JsonSerializer.Serialize(history);
+                    File.WriteAllText(Properties.Settings.Default.installPath + "\\history.json", saveHistory);
                     return;
                 }
                 else if (key.Key == ConsoleKey.DownArrow) pos++;
@@ -111,13 +125,14 @@ namespace FileManager
                 {
                     if (cmd != "")
                     {
+
                         PrintLine(1, height - 2, " ", cmd.Length);
                         curPos = 1;
-                        CommandHandler(cmd);
+                        if (CommandHandler(cmd)) history.Add(cmd);
                         cmd = "";
                         pos = 0;
                         shift = 0;
-                        posTmp = 0;
+                        posTmp = pos;
                         listFiles = ChageDir();
                         list = PrintList(listFiles);
                     }
@@ -136,6 +151,32 @@ namespace FileManager
                         shift = 0;
                     }
                 }
+                //просмотр истории
+                else if ((key.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control && key.Key == ConsoleKey.OemPlus)
+                {
+                    if (historyCount < history.Count() - 1)
+                    {
+                        historyCount++;
+                        cmd = PrintHistory(historyCount);
+                    }
+
+                }
+                else if ((key.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control && key.Key == ConsoleKey.OemMinus)
+                {
+                    if (historyCount > 0)
+                    {
+                        historyCount--;
+                        cmd = PrintHistory(historyCount);
+                    }
+                    else if (historyCount == 0)
+                    {
+                        PrintLine(1, height - 2, " ", Console.BufferWidth - 3);
+                        curPos = 1;
+                        cmd = "";
+                        historyCount = -1;
+                    }
+
+                }
                 // реализация ввода команд с клавиатуры
                 else if (key.Key == ConsoleKey.Backspace)
                 {
@@ -146,16 +187,27 @@ namespace FileManager
                         curPos--;
                     }
                 }
-                else 
+                else
                 {
                     cmd += key.KeyChar;
                     curPos++;
                 }
                 Console.CursorVisible = false;
+
+
             }
         }
+        private static string PrintHistory(int count)
+        {
+            Console.SetCursorPosition(1, height - 2);
+            PrintLine(1, height - 2, " ", Console.BufferWidth - 3);
+            Console.SetCursorPosition(1, height - 2);
+            Console.Write(history[count]);
+            curPos = history[count].Length + 1;
+            return history[count];
+        }
         //обработка комманд
-        private static void CommandHandler(string cmd)
+        private static bool CommandHandler(string cmd)
         {
             string[] cmdList = new string[3];
             string cmdTmp = "";
@@ -196,11 +248,14 @@ namespace FileManager
                     if (op1Last == '\\') DelDir(path1);
                     else File.Delete(path1);
                 }
+                else return false;
             }
             catch (Exception err)
             {
                 File.AppendAllText(fileErr, err.Message + '\n');
+                return false;
             }
+            return true;
         }
         //копирование директории
         static void CopyDir(string source, string destination)
