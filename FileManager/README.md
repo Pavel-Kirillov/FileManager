@@ -8,7 +8,7 @@
 
 -- комманды
 	copy [file] [file]
-	copy [file] [dir]\
-	copy [dir]\ [dir]\
-	del [file]
-	del [dir]\
+	copy [file] [dir\]
+	copy [dir\] [dir\]
+	del [file\]
+	del [dir\]

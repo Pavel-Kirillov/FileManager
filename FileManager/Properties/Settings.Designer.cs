@@ -23,12 +23,15 @@ namespace FileManager.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("20")]
         public uint numberOfItemsPerPage {
             get {
                 return ((uint)(this["numberOfItemsPerPage"]));
+            }
+            set {
+                this["numberOfItemsPerPage"] = value;
             }
         }
     }

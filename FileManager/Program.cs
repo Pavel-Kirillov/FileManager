@@ -100,6 +100,9 @@ namespace FileManager
                         curPos = 1;
                         CommandHandler(cmd);
                         cmd = "";
+                        pos = 0;
+                        shift = 0;
+                        posTmp = 0;
                         listFiles = ChageDir();
                         list = PrintList(listFiles);
                     }
@@ -135,10 +138,6 @@ namespace FileManager
                 }
                 Console.CursorVisible = false;
             }
-
-
-
-
         }
         //обработка комманд
         private static void CommandHandler(string cmd)
@@ -161,82 +160,44 @@ namespace FileManager
             try
             {
                 string currentDir = Directory.GetCurrentDirectory();
-                if (cmdList[0] == "copy" || cmdList[0] == "COPY")
+                if ((cmdList[0] == "copy" || cmdList[0] == "COPY") && count == 2)
                 {
                     char op1Last = cmdList[1][cmdList[1].Length - 1];
                     char op2Last = cmdList[2][cmdList[2].Length - 1];
                     string path1 = cmdList[1];
                     string path2 = cmdList[2];
-
-                    if (op1Last == '\\' && op2Last == '\\')
-                    {
-                        if (Directory.Exists(path1)) CopyDir(path1, path2);
-                        else
-                        {
-                            path1 = currentDir + '\\' + cmdList[1];
-                            if (Directory.Exists(path1)) CopyDir(path1, path2);
-                        }
-                    }
-                    else if (op1Last != '\\' && op2Last != '\\')
-                    {
-                        if (File.Exists(path1)) File.Copy(path1, path2, true);
-                        else
-                        {
-                            path1 = currentDir + '\\' + cmdList[1];
-                            if (File.Exists(path1)) File.Copy(path1, path2, true);
-                        }
-                    }
+                    if (op1Last == '\\' && op2Last == '\\') CopyDir(path1, path2);
+                    else if (op1Last != '\\' && op2Last != '\\') File.Copy(path1, path2, true);
                     else if (op1Last != '\\' && op2Last == '\\')
                     {
-                        if (File.Exists(path1)) File.Copy(path1, path2 + path1, true);
-                        else
-                        {
-                            path1 = currentDir + '\\' + cmdList[1];
-                            if (File.Exists(path1)) File.Copy(path1, path2 + path1, true);
-                        }
+                        if (!Directory.Exists(path2)) Directory.CreateDirectory(path2);
+                        File.Copy(path1, path2 + path1, true);
                     }
                 }
-                else if (cmdList[0] == "del" || cmdList[0] == "DEL")
+                else if ((cmdList[0] == "del" || cmdList[0] == "DEL") && count == 1)
                 {
                     char op1Last = cmdList[1][cmdList[1].Length - 1];
-                    string path = cmdList[1];
-                    if (op1Last == '\\')
-                    {
-                        if (Directory.Exists(cmdList[1])) DelDir(path);
-                        else
-                        {
-                            path = currentDir + '\\' + cmdList[1];
-                            if (Directory.Exists(path)) DelDir(path);
-                        }
-                    }
-                    else
-                    {
-                        if (File.Exists(cmdList[1])) File.Delete(path);
-                        else
-                        {
-                            path = currentDir + '\\' + cmdList[1];
-                            if (File.Exists(path)) File.Delete(path);
-                        }
-                    }
+                    string path1 = cmdList[1];
+                    if (op1Last == '\\') DelDir(path1);
+                    else File.Delete(path1);
                 }
             }
-            catch
-            {
-
-            }
+            catch { }
         }
         //копирование директории
         static void CopyDir(string source, string destination)
         {
-            string[] listForCopy = Directory.GetDirectories(source, "*", SearchOption.AllDirectories);
-            for (int i = 0; i < listForCopy.Length; i++)
-                if (!Directory.Exists(destination + listForCopy[i]))
-                    Directory.CreateDirectory(destination + listForCopy[i]);
-            listForCopy = Directory.GetFiles(source, "*", SearchOption.AllDirectories);
-            for (int i = 0; i < listForCopy.Length; i++)
+            if (!Directory.Exists(destination))
+                Directory.CreateDirectory(destination);
+            string[] dirForCopy = Directory.GetDirectories(source);
+            for (int i = 0; i < dirForCopy.Length; i++)
             {
-                File.Copy(listForCopy[i], destination + listForCopy[i], true);
+                string destTmp = destination + dirForCopy[i].Split('\\').Last() + '\\';
+                CopyDir(dirForCopy[i] + '\\', destTmp);
             }
+            string[] fileForCopy = Directory.GetFiles(source);
+            for (int i = 0; i < fileForCopy.Length; i++)
+                File.Copy(fileForCopy[i], destination + fileForCopy[i].Split('\\').Last(), true);
         }
         //удаление директории
         static void DelDir(string path)
@@ -249,9 +210,6 @@ namespace FileManager
                 Directory.Delete(del[i]);
             Directory.Delete(path);
         }
-
-
-
         static void ClearArea()
         {
             for (int i = 3; i < Console.BufferHeight - 3; i++)
@@ -264,17 +222,12 @@ namespace FileManager
             if (dir == "..") currentDir = new DirectoryInfo(Directory.GetParent(Directory.GetCurrentDirectory()).FullName);
             else
             {
-                if (!drive)
-                {
-                    currentDir = new DirectoryInfo(Directory.GetCurrentDirectory() + '\\' + dir);
-
-                }
+                if (!drive) currentDir = new DirectoryInfo(Directory.GetCurrentDirectory() + '\\' + dir);
                 else
                 {
                     currentDir = new DirectoryInfo(dir);
                     drive = false;
                 }
-
             }
             try
             {
@@ -286,7 +239,6 @@ namespace FileManager
                 Directory.SetCurrentDirectory(Directory.GetParent(currentDir.FullName).FullName);
                 currentDir = Directory.GetParent(currentDir.FullName);
             }
-
             PrintLine(1, 1, currentDir.FullName, Console.BufferWidth - 3);
             try
             {
@@ -300,8 +252,6 @@ namespace FileManager
                 Directory.SetCurrentDirectory(Directory.GetParent(currentDir.FullName).FullName);
                 return listFiles;
             }
-
-
         }
         static string[] PrintList(string[] listFiles, int shift = 0)
         {
@@ -320,7 +270,6 @@ namespace FileManager
                     else selectLine = false;
                     PrintLine(1, 3 + i, listForPrint[i], listForPrint[i].Length, true, selectLine);
                 }
-
             }
             else
             {
@@ -405,8 +354,8 @@ namespace FileManager
             if ((fileAttr.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden) attr += "H";
             if ((fileAttr.Attributes & FileAttributes.Directory) == FileAttributes.Directory) dir = "DIR";
             DateTime time = File.GetLastWriteTime(file);
-            file += "\t" + dir + "\t" + attr + "\t" + time + "\t" + 
-                ((fileAttr.Attributes & FileAttributes.Directory) == FileAttributes.Directory ? ((sizeDir!="")? sizeDir + " байт" : ""): fileAttr.Length + " байт");
+            file += "\t" + dir + "\t" + attr + "\t" + time + "\t" +
+                ((fileAttr.Attributes & FileAttributes.Directory) == FileAttributes.Directory ? ((sizeDir != "") ? sizeDir + " байт" : "") : fileAttr.Length + " байт");
             return file;
         }
 
