@@ -23,7 +23,12 @@ namespace FileManager
             Console.SetWindowSize(width + 1, height);
             Console.SetBufferSize(width + 1, height);
             string path;
-            if (Properties.Settings.Default.installPath == "") path = Directory.GetCurrentDirectory();
+            if (Properties.Settings.Default.installPath == "")
+            {
+                path = Directory.GetCurrentDirectory();
+                Properties.Settings.Default.installPath = path;
+                Properties.Settings.Default.Save();
+            }
             else path = Properties.Settings.Default.installPath;
             string loadHistory = path + "\\history.json";
             if (File.Exists(loadHistory)) history = JsonSerializer.Deserialize<List<string>>(File.ReadAllText(loadHistory));
@@ -40,52 +45,36 @@ namespace FileManager
                     if (j > 0 && j < height - 1 && (i == 0 || i == width - 1)) PrintSym(i, j, '|');
                     if (i > 0 && i < width - 1 && (j == 2 || j == height - 3)) PrintSym(i, j, '-');
                 }
-            if (Properties.Settings.Default.saveCurrentDir != "") Directory.SetCurrentDirectory(Properties.Settings.Default.saveCurrentDir);
+            string saveCurrentDir = Properties.Settings.Default.saveCurrentDir;
+            if (saveCurrentDir != "") Directory.SetCurrentDirectory(saveCurrentDir);
             else
             {
-                Properties.Settings.Default.installPath = Directory.GetCurrentDirectory();
-                Properties.Settings.Default.Save();
+                saveCurrentDir = Directory.GetCurrentDirectory();
             }
-            string[] listFiles = ChageDir();
+            string[] listFiles = ChageDir(saveCurrentDir);
             string[] list = PrintList(listFiles);
 
             int posTmp = 0;
             int shift = 0;
+            int shiftTmp = 0;
             string cmd = "";
             int historyCount = -1;
             //навигация
             while (true)
             {
-                if (shift >= listFiles.Length - list.Length) shift = listFiles.Length - list.Length;
-                if (shift < 0) shift = 0;
+                if (shiftTmp != shift)
+                    list = PrintList(listFiles, shift);
+                shiftTmp = shift;
+
                 if (posTmp != pos)
                 {
-                    if (pos < 0)
-                    {
-                        if (list.First() != "..")
-                            list = PrintList(listFiles, shift--);
-                        pos = 0;
-                    }
-                    else if (pos >= list.Length)
-                    {
-                        if (list.Last() != listFiles.Last().Split('\\').Last()) //list.Last() надо заменить
-                            list = PrintList(listFiles, ++shift);
-                        pos = list.Length - 1;
-                    }
-
-
                     PrintLine(1, 3 + posTmp, list[posTmp], list[posTmp].Length, true);
                     PrintLine(1, 3 + pos, list[pos], list[pos].Length, true, true);
                 }
-
                 posTmp = pos;
-
                 Console.SetCursorPosition(curPos, height - 2);
                 Console.CursorVisible = true;
                 ConsoleKeyInfo key = Console.ReadKey();
-
-
-
                 if (key.Key == ConsoleKey.F10)
                 {
                     Properties.Settings.Default.saveCurrentDir = Directory.GetCurrentDirectory();
@@ -94,31 +83,56 @@ namespace FileManager
                     File.WriteAllText(Properties.Settings.Default.installPath + "\\history.json", saveHistory);
                     return;
                 }
-                else if (key.Key == ConsoleKey.DownArrow) pos++;
-                else if (key.Key == ConsoleKey.UpArrow) pos--;
-                else if (key.Key == ConsoleKey.PageDown)
+                else if (key.Key == ConsoleKey.DownArrow)
+                {
+                    if (pos != list.Length - 1)
+                        pos++;
+                    else if (pos + shift < listFiles.Length)
+                        shift++;
+                }
+                else if (key.Key == ConsoleKey.UpArrow)
                 {
                     if (pos != 0)
+                        pos--;
+                    else if (shift != 0)
+                        shift--;
+                }
+                else if (key.Key == ConsoleKey.PageDown)
+                {
+                    if (pos == 0) pos = list.Length - 1;
+                    else shift += numberItems;
+                    if (shift + numberItems > listFiles.Length)
                     {
-                        shift += pos;
-                        pos = list.Length;
+                        shift = listFiles.Length - numberItems + 1;
                     }
-                    else pos = list.Length - 1;
+                    if (shift < 0)
+                    {
+                        shift = 0;
+                        pos = listFiles.Length - (drive ? 1 : 0);
+                    }
+                    else if (listFiles.Last().Split('\\').Last() == list.Last()) pos = numberItems - 1;
+
+
                 }
                 else if (key.Key == ConsoleKey.PageUp)
                 {
-                    if (pos != list.Length - 1)
+                    if (pos == list.Length - 1) pos = 0;
+                    else
                     {
-                        shift -= list.Length - pos;
-                        pos = -1;
+                        shift -= numberItems - pos - 1;
+                        pos = 0;
                     }
-                    else pos = 0;
+                    if (shift < 0)
+                    {
+                        pos = 0;
+                        shift = 0;
+                    }
                 }
                 else if (key.Key == ConsoleKey.F2)
                 {
                     if (list[pos] != "..")
                     {
-                        long sizeDir = SumSizeDir(list[pos]);
+                        long sizeDir = SumSizeDir(listFiles[pos + shift - (!drive ? 1 : 0)]);
                         PrintLine(1, pos + 3, list[pos], list[pos].Length, true, true, Convert.ToString(sizeDir));
                     }
                 }
@@ -126,16 +140,19 @@ namespace FileManager
                 {
                     if (cmd != "")
                     {
-
+                        if (CommandHandler(cmd))
+                        {
+                            history.Add(cmd);
+                            pos = 0;
+                            shift = 0;
+                            posTmp = pos;
+                            listFiles = ChageDir(Directory.GetCurrentDirectory());
+                            list = PrintList(listFiles);
+                        }
+                     
                         PrintLine(1, height - 2, " ", cmd.Length);
                         curPos = 1;
-                        if (CommandHandler(cmd)) history.Add(cmd);
                         cmd = "";
-                        pos = 0;
-                        shift = 0;
-                        posTmp = pos;
-                        listFiles = ChageDir();
-                        list = PrintList(listFiles);
                     }
                     else if (Directory.GetParent(Directory.GetCurrentDirectory()) == null && list[pos] == "..")
                     {
@@ -144,9 +161,9 @@ namespace FileManager
                         list = PrintList(listFiles);
                         PrintLine(1, 1, " ", Console.BufferWidth - 3);
                     }
-                    else
+                    else //if (list[pos].Split('\t')[1] != "FILE")
                     {
-                        listFiles = ChageDir(list[pos]);
+                        listFiles = ChageDir(pos + shift - (!drive ? 1 : 0) < 0 ? ".." : listFiles[pos + shift - (!drive ? 1 : 0)]);
                         list = PrintList(listFiles);
                         posTmp = pos;
                         shift = 0;
@@ -290,14 +307,14 @@ namespace FileManager
                 for (int j = 1; j < Console.BufferWidth - 2; j++)
                     PrintSym(j, i, ' ');
         }
-        //получение спичка директории в файлов.
+        //получение спиcка директории в файлов.
         static string[] ChageDir(string dir = "")
         {
             DirectoryInfo currentDir;
             if (dir == "..") currentDir = new DirectoryInfo(Directory.GetParent(Directory.GetCurrentDirectory()).FullName);
             else
             {
-                if (!drive) currentDir = new DirectoryInfo(Directory.GetCurrentDirectory() + '\\' + dir);
+                if (!drive) currentDir = new DirectoryInfo(dir);
                 else
                 {
                     currentDir = new DirectoryInfo(dir);
