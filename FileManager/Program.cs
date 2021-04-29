@@ -217,6 +217,7 @@ namespace FileManager
         }
         private static string PrintHistory(int count)
         {
+            count = history.Count() - count - 1;
             Console.SetCursorPosition(1, height - 2);
             PrintLine(1, height - 2, " ", Console.BufferWidth - 3);
             Console.SetCursorPosition(1, height - 2);
