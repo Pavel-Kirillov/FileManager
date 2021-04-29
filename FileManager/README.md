@@ -11,5 +11,5 @@
 	copy [file] [file]
 	copy [file] [dir\]
 	copy [dir\] [dir\]
-	del [file\]
+	del [file]
 	del [dir\]

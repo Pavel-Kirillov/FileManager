@@ -14,7 +14,7 @@ namespace FileManager
         static readonly string fileErr = Properties.Settings.Default.installPath + "\\errors\\random_name_exception.txt";
         static List<string> history = new List<string>();
         static int curPos = 1;
-        static int height = numberItems + 6;
+        static readonly int height = numberItems + 6;
         static void Main()
         {
             Console.Clear();
@@ -22,13 +22,14 @@ namespace FileManager
 
             Console.SetWindowSize(width + 1, height);
             Console.SetBufferSize(width + 1, height);
-
-
-            string loadHistory = Properties.Settings.Default.installPath + "\\history.json";
+            string path;
+            if (Properties.Settings.Default.installPath == "") path = Directory.GetCurrentDirectory();
+            else path = Properties.Settings.Default.installPath;
+            string loadHistory = path + "\\history.json";
             if (File.Exists(loadHistory)) history = JsonSerializer.Deserialize<List<string>>(File.ReadAllText(loadHistory));
+            string folderError = path + "\\errors";
 
-
-            if (!Directory.Exists(Properties.Settings.Default.installPath + "\\errors")) Directory.CreateDirectory(Properties.Settings.Default.installPath + "\\errors");
+            if (!Directory.Exists(folderError)) Directory.CreateDirectory(folderError);
             //рисуем рамку
             for (int i = 0; i < width; i++)
                 for (int j = 0; j < height; j++)
@@ -67,7 +68,7 @@ namespace FileManager
                     }
                     else if (pos >= list.Length)
                     {
-                        if (list.Last() != listFiles.Last().Split('\\').Last())
+                        if (list.Last() != listFiles.Last().Split('\\').Last()) //list.Last() надо заменить
                             list = PrintList(listFiles, ++shift);
                         pos = list.Length - 1;
                     }
@@ -289,6 +290,7 @@ namespace FileManager
                 for (int j = 1; j < Console.BufferWidth - 2; j++)
                     PrintSym(j, i, ' ');
         }
+        //получение спичка директории в файлов.
         static string[] ChageDir(string dir = "")
         {
             DirectoryInfo currentDir;
@@ -314,18 +316,29 @@ namespace FileManager
                 currentDir = Directory.GetParent(currentDir.FullName);
             }
             PrintLine(1, 1, currentDir.FullName, Console.BufferWidth - 3);
+            string[] listFiles;
+            string[] listFilesTmp;
+            string[] listDirTmp;
             try
             {
-                string[] listFiles = Directory.GetFileSystemEntries(currentDir.FullName);
-                return listFiles;
+                listDirTmp = Directory.GetDirectories(currentDir.FullName);
+                listFilesTmp = Directory.GetFiles(currentDir.FullName);
             }
             catch (Exception err)//System.UnauthorizedAccessException,System.IO.IOException
             {
                 File.AppendAllText(fileErr, err.Message + '\n');
-                string[] listFiles = Directory.GetFileSystemEntries(Directory.GetParent(currentDir.FullName).FullName);
+                listDirTmp = Directory.GetDirectories(Directory.GetParent(currentDir.FullName).FullName);
+                listFilesTmp = Directory.GetFiles(Directory.GetParent(currentDir.FullName).FullName);
                 Directory.SetCurrentDirectory(Directory.GetParent(currentDir.FullName).FullName);
-                return listFiles;
+
             }
+            listFiles = new string[listDirTmp.Length + listFilesTmp.Length];
+            for (int i = 0; i < listFiles.Length; i++)
+            {
+                if (i < listDirTmp.Length) listFiles[i] = listDirTmp[i];
+                else listFiles[i] = listFilesTmp[i - listDirTmp.Length];
+            }
+            return listFiles;
         }
         static string[] PrintList(string[] listFiles, int shift = 0)
         {
@@ -421,7 +434,6 @@ namespace FileManager
         //добавление атрибутов файла
         static string AddAttributeFiles(string file, string sizeDir = "")
         {
-            //FileAttributes fileAttr = File.GetAttributes(file);
             string attr = "";
             FileInfo fileAttr = new FileInfo(file);
             string dir = "FILE";
