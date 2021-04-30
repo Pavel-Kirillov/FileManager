@@ -54,11 +54,12 @@ namespace FileManager
             string[] listFiles = ChageDir(saveCurrentDir);
             string[] list = PrintList(listFiles);
 
-            int posTmp = 0;
-            int shift = 0;
+            pos = Properties.Settings.Default.posList;
+            int shift = Properties.Settings.Default.shiftList;
             int shiftTmp = 0;
             string cmd = "";
             int historyCount = -1;
+            int posTmp = 0;
             //навигация
             while (true)
             {
@@ -78,6 +79,8 @@ namespace FileManager
                 if (key.Key == ConsoleKey.F10)
                 {
                     Properties.Settings.Default.saveCurrentDir = Directory.GetCurrentDirectory();
+                    Properties.Settings.Default.posList = pos;
+                    Properties.Settings.Default.shiftList = shift;
                     Properties.Settings.Default.Save();
                     string saveHistory = JsonSerializer.Serialize(history);
                     File.WriteAllText(Properties.Settings.Default.installPath + "\\history.json", saveHistory);
@@ -111,8 +114,6 @@ namespace FileManager
                         pos = listFiles.Length - (drive ? 1 : 0);
                     }
                     else if (listFiles.Last().Split('\\').Last() == list.Last()) pos = numberItems - 1;
-
-
                 }
                 else if (key.Key == ConsoleKey.PageUp)
                 {
@@ -149,7 +150,7 @@ namespace FileManager
                             listFiles = ChageDir(Directory.GetCurrentDirectory());
                             list = PrintList(listFiles);
                         }
-                     
+
                         PrintLine(1, height - 2, " ", cmd.Length);
                         curPos = 1;
                         cmd = "";
@@ -161,12 +162,25 @@ namespace FileManager
                         list = PrintList(listFiles);
                         PrintLine(1, 1, " ", Console.BufferWidth - 3);
                     }
-                    else //if (list[pos].Split('\t')[1] != "FILE")
+                    else
                     {
-                        listFiles = ChageDir(pos + shift - (!drive ? 1 : 0) < 0 ? ".." : listFiles[pos + shift - (!drive ? 1 : 0)]);
-                        list = PrintList(listFiles);
-                        posTmp = pos;
-                        shift = 0;
+                        if (list[pos] != "..")
+                        {
+                            if (Directory.Exists(listFiles[pos + shift - (!drive ? 1 : 0)]))
+                            {
+                                listFiles = ChageDir(listFiles[pos + shift - (!drive ? 1 : 0)]);
+                                list = PrintList(listFiles);
+                                posTmp = pos;
+                                shift = 0;
+                            }
+                        }
+                        else if (list[pos] == "..")
+                        {
+                            listFiles = ChageDir("..");
+                            list = PrintList(listFiles);
+                            posTmp = pos;
+                            shift = 0;
+                        }
                     }
                 }
                 //просмотр истории
@@ -193,7 +207,6 @@ namespace FileManager
                         cmd = "";
                         historyCount = -1;
                     }
-
                 }
                 // реализация ввода команд с клавиатуры
                 else if (key.Key == ConsoleKey.Backspace)
@@ -207,12 +220,13 @@ namespace FileManager
                 }
                 else
                 {
-                    cmd += key.KeyChar;
-                    curPos++;
+                    if (cmd.Length < width - 3)
+                    {
+                        cmd += key.KeyChar;
+                        curPos++;
+                    }
                 }
                 Console.CursorVisible = false;
-
-
             }
         }
         private static string PrintHistory(int count)

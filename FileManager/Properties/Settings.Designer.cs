@@ -55,5 +55,29 @@ namespace FileManager.Properties {
                 this["installPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int posList {
+            get {
+                return ((int)(this["posList"]));
+            }
+            set {
+                this["posList"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int shiftList {
+            get {
+                return ((int)(this["shiftList"]));
+            }
+            set {
+                this["shiftList"] = value;
+            }
+        }
     }
 }
